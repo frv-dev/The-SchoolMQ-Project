@@ -1,0 +1,85 @@
+# PORTS:
+#   I created this pattern for ports to avoid conflicts between projects.
+#
+#   XXAAB
+#   XX = 10 - The SchoolMQ Project ID
+#   AA = Service ID
+#   B = Container port ID
+
+services:
+  rabbitmq:
+    container_name: tsmqp-rabbitmq
+    image: tsmqp-rabbitmq
+    build:
+      dockerfile: ./RabbitMQ/.docker/Dockerfile
+    ports:
+      - 10011:5672
+      - 10012:15672
+    env_file:
+      - ./RabbitMQ/.docker/.env
+
+  school_platform:
+    container_name: tsmqp-school-platform
+    image: tsmqp-school-platform
+    build:
+      dockerfile: ./school_platform/.docker/php/Dockerfile
+      args:
+        - user=school_platform
+        - uid=1000
+        - gid=1000
+    working_dir: /home/school_platform
+    ports:
+      - 10021:8080
+    volumes:
+      - ./school_platform:/home/school_platform
+    links:
+      - rabbitmq
+    command: sh ./.docker/php/command.sh
+
+  email_service:
+    container_name: tsmqp-email-service
+    image: tsmqp-email-service
+    build:
+      dockerfile: ./email_service/.docker/php/Dockerfile
+      args:
+        - user=email_service
+        - uid=1000
+        - gid=1000
+    working_dir: /home/email_service
+    volumes:
+      - ./email_service:/home/email_service
+    links:
+      - rabbitmq
+    command: sh ./.docker/php/command.sh
+
+  payment_service:
+    container_name: tsmqp-payment-service
+    image: tsmqp-payment-service
+    build:
+      dockerfile: ./payment_service/.docker/php/Dockerfile
+      args:
+        - user=payment_service
+        - uid=1000
+        - gid=1000
+    working_dir: /home/payment_service
+    volumes:
+      - ./payment_service:/home/payment_service
+    links:
+      - rabbitmq
+    command: sh ./.docker/php/command.sh
+
+  report_service:
+    container_name: tsmqp-report-service
+    image: tsmqp-report-service
+    build:
+      dockerfile: ./report_service/.docker/php/Dockerfile
+      args:
+        - user=report_service
+        - uid=1000
+        - gid=1000
+    working_dir: /home/report_service
+    volumes:
+      - ./report_service:/home/report_service
+    links:
+      - rabbitmq
+    command: sh ./.docker/php/command.sh
